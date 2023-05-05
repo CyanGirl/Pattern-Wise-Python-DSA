@@ -32,5 +32,5 @@ def try_union_find(edges):
 
     return [None,None] 
 
-edges = [[1,2],[1,3],[2,3]]
+edges = [[2,1],[3,1],[4,2],[1,4]]
 try_union_find(edges)
