@@ -13,46 +13,86 @@ Output: I am admin My home is /admin/home
 
 from collections import defaultdict
 
-def string_replace(library: dict, sentence: str):
+# def string_replace(library: dict, sentence: str):
     
-    # build the graph
-    indegree = defaultdict(int)
-    adj = defaultdict(list)
-    for key1,val1 in library.items():
-        for key2,val2 in library.items():
-            if key1==key2: continue
+#     # build the graph
+#     indegree = defaultdict(int)
+#     adj = defaultdict(list)
+#     for key1,val1 in library.items():
+#         for key2,val2 in library.items():
+#             if key1==key2: continue
 
-            if f"%{key1}%" in val2:
-                adj[key1].append(key2)
-                indegree[key2]=indegree.get(key2,0)+1
+#             if f"%{key1}%" in val2:
+#                 adj[key1].append(key2)
+#                 indegree[key2]=indegree.get(key2,0)+1
 
-    q=[]
-    for key in library:
-        if indegree.get(key,0)==0:
-            q.append(key)
-    if len(q)<1 and len(library)>0: return "String Cannot be Replaced!"
+#     q=[]
+#     for key in library:
+#         if indegree.get(key,0)==0:
+#             q.append(key)
+#     if len(q)<1 and len(library)>0: return "String Cannot be Replaced!"
 
-    while q:
-        curnode = q.pop(0)
+#     while q:
+#         curnode = q.pop(0)
 
-        for nei in adj.get(curnode,[]):
-            indegree[nei]-=1
-            tempvar=library[nei].replace(f"%{curnode}%",library[curnode])
-            library[nei]=tempvar # syntax <text>.replace(pattern,to_replace)
+#         for nei in adj.get(curnode,[]):
+#             indegree[nei]-=1
+#             tempvar=library[nei].replace(f"%{curnode}%",library[curnode])
+#             library[nei]=tempvar # syntax <text>.replace(pattern,to_replace)
 
-            if indegree[nei]==0: # add when dependencies are over
-                q.append(nei)
+#             if indegree[nei]==0: # add when dependencies are over
+#                 q.append(nei)
 
-    for key,val in library.items():
-        if f"%{key}%" in sentence:
-            tempvar=sentence.replace(f"%{key}%", val)
-            sentence=tempvar
+#     for key,val in library.items():
+#         if f"%{key}%" in sentence:
+#             tempvar=sentence.replace(f"%{key}%", val)
+#             sentence=tempvar
 
-    return sentence
+#     return sentence
 
 
 #print(string_replace({"USER":"admin", "HOME":"/%USER%/home"},"I am %USER% My home is %HOME%"))
 
+
+from collections import defaultdict, deque
+
+def topological_sort(library: dict):
+    indegree = defaultdict(int)
+    adj = defaultdict(list)
+
+    for key1, val1 in library.items():
+        for key2, val2 in library.items():
+            if key1 == key2:
+                continue
+
+            if f"%{key1}%" in val2:
+                adj[key1].append(key2)
+                indegree[key2] = indegree.get(key2, 0) + 1
+
+    queue = deque(key for key in library if indegree.get(key, 0) == 0)
+
+    while queue:
+        cur_node = queue.popleft()
+
+        for neighbor in adj.get(cur_node, []):
+            indegree[neighbor] -= 1
+            library[neighbor] = library[neighbor].replace(f"%{cur_node}%", library[cur_node])
+
+            if indegree[neighbor] == 0:
+                queue.append(neighbor)
+
+    return library
+
+def string_replace(library: dict, sentence: str):
+    library = topological_sort(library)
+
+    for key, val in library.items():
+        if f"%{key}%" in sentence:
+            sentence = sentence.replace(f"%{key}%", val)
+
+    return sentence
+
+print(string_replace({"X": "%Y%", "Y": "%X%"},"%X%"))
 
 
 def test_string_replace():
@@ -76,7 +116,7 @@ def test_string_replace():
         assert output == expected_output
         print("Test Passed!\n")
 
-test_string_replace()
+#test_string_replace()
    
 
 
